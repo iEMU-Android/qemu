@@ -15,11 +15,9 @@ static void s5l8702_init(Object *obj)
 {
     S5L8702State *s = S5L8702(obj);
 
-    printf("s5l8702_init\n");
-
     object_initialize_child(obj, "cpu", &s->cpu, ARM_CPU_TYPE_NAME("arm926"));
 
-    for (int i = 0; i < 2; i++) {
+    for (uint32_t i = 0; i < sizeof(s->vic); i++) {
         object_initialize_child(obj, "vic[*]", &s->vic[i], TYPE_PL192);
     }
 
@@ -27,17 +25,16 @@ static void s5l8702_init(Object *obj)
     object_initialize_child(obj, "aes", &s->aes, TYPE_S5L8702_AES);
     object_initialize_child(obj, "sha", &s->sha, TYPE_S5L8702_SHA);
     object_initialize_child(obj, "gpio", &s->gpio, TYPE_S5L8702_GPIO);
-    object_initialize_child(obj, "spi0", &s->spi0, TYPE_S5L8702_SPI);
-    object_initialize_child(obj, "spi1", &s->spi1, TYPE_S5L8702_SPI);
-    object_initialize_child(obj, "spi2", &s->spi2, TYPE_S5L8702_SPI);
+
+    for (uint32_t i = 0; i < sizeof(s->spi); i++) {
+        object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_S5L8702_SPI);
+    }
 }
 
 static void s5l8702_realize(DeviceState *dev, Error **errp)
 {
     S5L8702State *s = S5L8702(dev);
     MemoryRegion *system_memory = get_system_memory();
-
-    printf("s5l8702_realize\n");
 
     qdev_realize(DEVICE(&s->cpu), NULL, &error_fatal);
 
@@ -65,17 +62,13 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     sysbus_realize(SYS_BUS_DEVICE(&s->gpio), &error_fatal);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->gpio), 0, S5L8702_GPIO_BASE);
 
-    /* SPI0 */
-    sysbus_realize(SYS_BUS_DEVICE(&s->spi0), &error_fatal);
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi0), 0, S5L8702_SPI0_BASE);
-
-    /* SPI1 */
-    sysbus_realize(SYS_BUS_DEVICE(&s->spi1), &error_fatal);
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi1), 0, S5L8702_SPI1_BASE);
-
-    /* SPI2 */
-    sysbus_realize(SYS_BUS_DEVICE(&s->spi2), &error_fatal);
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi2), 0, S5L8702_SPI2_BASE);
+    /* SPI */
+    for (uint32_t i = 0; i < sizeof(s->spi); i++) {
+        sysbus_realize(SYS_BUS_DEVICE(&s->spi[i]), &error_fatal);
+    }
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[0]), 0, S5L8702_SPI0_BASE);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[1]), 0, S5L8702_SPI1_BASE);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[2]), 0, S5L8702_SPI2_BASE);
 
     /* BootROM */
     memory_region_init_ram(&s->brom, OBJECT(dev), "s5l8702.bootrom", S5L8702_BOOTROM_SIZE, &error_fatal);
@@ -93,19 +86,11 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
 
     create_unimplemented_device("unimplemented-memory", 0, 0xFFFFFFFF);
     create_unimplemented_device("wdt", 0x3c800000, 0x100000);
-    // create_unimplemented_device("gpio", 0x3cf00000, 0x100000);
-    // create_unimplemented_device("spi0", 0x3c300000, 0x100000);
-    // create_unimplemented_device("spi1", 0x3ce00000, 0x100000);
-    // create_unimplemented_device("spi2", 0x3d200000, 0x100000);
-    // create_unimplemented_device("sha", 0x38000000, 0x100000);
-    // create_unimplemented_device("aes", 0x38c00000, 0x100000);
 }
 
 static void s5l8702_class_init(ObjectClass *oc, void *data)
 {
     DeviceClass *dc = DEVICE_CLASS(oc);
-
-    printf("s5l8702_class_init\n");
 
     dc->realize = s5l8702_realize;
 }

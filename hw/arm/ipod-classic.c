@@ -58,8 +58,6 @@ static void ipod_classic_init(Object *obj)
     MachineState *machine = MACHINE(obj);
     IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
     
-    printf("ipod_classic_init\n");
-
     if (!object_property_add_str(obj, "nand", ipod_classic_get_nand_path, ipod_classic_set_nand_path)) {
         printf("ipod_classic_init: failed to add nand property\n");
     }
@@ -73,21 +71,9 @@ static void ipod_classic_init(Object *obj)
     }
 }
 
-// static void ipod_classic_reset(void *opaque)
-// {
-//     IpodClassicState *s = IPOD_CLASSIC_MACHINE(opaque);
-    
-//     printf("ipod_classic_reset\n");
-    
-//     cpu_reset(CPU(&(s->soc.cpu)));
-//     cpu_set_pc(CPU(&(s->soc.cpu)), S5L8702_BASE_BOOT_ADDR);
-// }
-
 static void ipod_classic_machine_init(MachineState *machine)
 {
     IpodClassicState *s = IPOD_CLASSIC_MACHINE(machine);
-    
-    printf("ipod_classic_machine_init\n");
 
     /* BIOS is not supported by this board */
     if (machine->firmware) {
@@ -144,19 +130,16 @@ static void ipod_classic_machine_init(MachineState *machine)
         printf("ipod_classic_machine_init: failed to read bootrom\n");
         exit(1);
     }
-
-    // qemu_register_reset(ipod_classic_reset, s);
 }
 
 static void ipod_classic_class_init(ObjectClass *oc, void *data)
 {
     MachineClass *mc = MACHINE_CLASS(oc);
+
     mc->init = ipod_classic_machine_init;
     mc->default_cpu_type = ARM_CPU_TYPE_NAME("arm926");
     mc->default_ram_size = 64 * MiB;
-    // mc->default_cpus = 1;
-    
-    printf("ipod_classic_class_init\n");
+    mc->default_cpus = 1;
 };
 
 static const TypeInfo ipod_classic_types[] = {

@@ -49,9 +49,7 @@ struct S5L8702State {
     S5L8702AesState aes;
     S5L8702ShaState sha;
     S5L8702GpioState gpio;
-    S5L8702SpiState spi0;
-    S5L8702SpiState spi1;
-    S5L8702SpiState spi2;
+    S5L8702SpiState spi[3];
     S5L8702TimerState timer;
 };
 

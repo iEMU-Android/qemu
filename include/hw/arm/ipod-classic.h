@@ -8,7 +8,7 @@
 #include "sysemu/block-backend.h"
 #include "hw/arm/s5l8702.h"
 
-#define TYPE_IPOD_CLASSIC_MACHINE MACHINE_TYPE_NAME("ipod-classic")
+#define TYPE_IPOD_CLASSIC_MACHINE   MACHINE_TYPE_NAME("ipod-classic")
 OBJECT_DECLARE_SIMPLE_TYPE(IpodClassicState, IPOD_CLASSIC_MACHINE)
 
 struct IpodClassicState {

@@ -23,11 +23,10 @@ struct S5L8702GpioState {
 
     /*< public >*/
     MemoryRegion iomem;
+    qemu_irq output[S5L8702_GPIO_PINS];
 
     uint8_t pcon[S5L8702_GPIO_PORTS];
     uint8_t pdat[S5L8702_GPIO_PORTS];
-
-    qemu_irq output[S5L8702_GPIO_PINS];
 };
 
 #endif /* HW_GPIO_S5L8702_GPIO_H */

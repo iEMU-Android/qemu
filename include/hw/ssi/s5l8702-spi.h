@@ -6,15 +6,13 @@
 #include "hw/ssi/ssi.h"
 #include "qemu/fifo8.h"
 
-#define TYPE_S5L8702_SPI "s5l8702-spi"
+#define TYPE_S5L8702_SPI    "s5l8702-spi"
 OBJECT_DECLARE_SIMPLE_TYPE(S5L8702SpiState, S5L8702_SPI)
 
-#define S5L8702_SPI0_BASE 0x3c300000
-#define S5L8702_SPI1_BASE 0x3ce00000
-#define S5L8702_SPI2_BASE 0x3d200000
-#define S5L8702_SPI_SIZE 0x00100000
-
-#define S5L8702_SPI_NUM_REGS (S5L8702_SPI_SIZE / sizeof(uint32_t))
+#define S5L8702_SPI0_BASE   0x3c300000
+#define S5L8702_SPI1_BASE   0x3ce00000
+#define S5L8702_SPI2_BASE   0x3d200000
+#define S5L8702_SPI_SIZE    0x00100000
 
 struct S5L8702SpiState {
     /*< private >*/
@@ -22,15 +20,12 @@ struct S5L8702SpiState {
 
     /*< public >*/
     MemoryRegion iomem;
-    // uint32_t regs[S5L8702_SPI_NUM_REGS];
-
     SSIBus *spi;
 
     uint32_t spisetup;
     uint32_t spitxdata;
     uint32_t spirxdata;
 
-    bool has_tx_data;
     bool has_rx_data;
 };
 
