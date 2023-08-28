@@ -32,7 +32,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(S5L8702State, S5L8702)
 #define S5L8702_VIC_BASE_ADDR            0x38E00000
 #define S5L8702_CLK_BASE_ADDR            0x3C500000
 
-#define S5L8702_BASE_BOOT_ADDR           S5L8702_DRAM_BASE_ADDR
+#define S5L8702_BASE_BOOT_ADDR           0x0
 
 struct S5L8702State {
     /*< private >*/
@@ -41,7 +41,7 @@ struct S5L8702State {
     /*< public >*/
     ARMCPU cpu;
     MemoryRegion brom;          // S5L8702_BOOTROM_BASE_ADDR
-    MemoryRegion brom_alias;    // 0x00000000
+    MemoryRegion brom_alias;    // S5L8702_BASE_BOOT_ADDR
     MemoryRegion iram0;         // S5L8702_IRAM0_BASE_ADDR
     MemoryRegion iram1;         // S5L8702_IRAM1_BASE_ADDR
     PL192State vic[2];

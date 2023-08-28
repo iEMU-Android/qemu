@@ -28,6 +28,8 @@ static void s5l8702_sha_write(void *opaque, hwaddr offset,
     S5L8702ShaState *s = S5L8702_SHA(opaque);
     const uint32_t idx = REG_INDEX(offset);
 
+    assert(0);
+
     switch (offset) {
     default:
         qemu_log_mask(LOG_UNIMP, "%s: unimplemented write (offset 0x%04x, value 0x%08x)\n",

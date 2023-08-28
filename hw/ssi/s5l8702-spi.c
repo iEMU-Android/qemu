@@ -23,8 +23,6 @@ static uint64_t s5l8702_spi_read(void *opaque, hwaddr offset,
                                       unsigned size)
 {
     S5L8702SpiState *s = S5L8702_SPI(opaque);
-    const uint32_t idx = REG_INDEX(offset);
-
     uint64_t r = 0;
 
     switch (offset) {
@@ -65,7 +63,6 @@ static void s5l8702_spi_write(void *opaque, hwaddr offset,
                                    uint64_t val, unsigned size)
 {
     S5L8702SpiState *s = S5L8702_SPI(opaque);
-    const uint32_t idx = REG_INDEX(offset);
 
     switch (offset) {
     case SPISETUP:

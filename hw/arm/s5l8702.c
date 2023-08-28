@@ -15,9 +15,11 @@ static void s5l8702_init(Object *obj)
 {
     S5L8702State *s = S5L8702(obj);
 
-    object_initialize_child(obj, "cpu", &s->cpu, ARM_CPU_TYPE_NAME("arm926"));
+    printf("s5l8702_init\n");
 
-    for (uint32_t i = 0; i < sizeof(s->vic); i++) {
+    object_initialize_child(obj, "cpu", &(s->cpu), ARM_CPU_TYPE_NAME("arm926"));
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(s->vic); i++) {
         object_initialize_child(obj, "vic[*]", &s->vic[i], TYPE_PL192);
     }
 
@@ -26,7 +28,7 @@ static void s5l8702_init(Object *obj)
     object_initialize_child(obj, "sha", &s->sha, TYPE_S5L8702_SHA);
     object_initialize_child(obj, "gpio", &s->gpio, TYPE_S5L8702_GPIO);
 
-    for (uint32_t i = 0; i < sizeof(s->spi); i++) {
+    for (uint32_t i = 0; i < ARRAY_SIZE(s->spi); i++) {
         object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_S5L8702_SPI);
     }
 }
@@ -36,10 +38,12 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     S5L8702State *s = S5L8702(dev);
     MemoryRegion *system_memory = get_system_memory();
 
+    printf("s5l8702_realize\n");
+
     qdev_realize(DEVICE(&s->cpu), NULL, &error_fatal);
 
     /* VIC */
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < ARRAY_SIZE(s->vic); i++) {
         sysbus_realize(SYS_BUS_DEVICE(&s->vic[i]), &error_fatal);
         sysbus_mmio_map(SYS_BUS_DEVICE(&s->vic[i]), 0, S5L8702_VIC_BASE_ADDR + (i * 0x1000));
         // sysbus_connect_irq(SYS_BUS_DEVICE(&s->vic[i]), 0, cpu_irq[0]);
@@ -63,7 +67,7 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->gpio), 0, S5L8702_GPIO_BASE);
 
     /* SPI */
-    for (uint32_t i = 0; i < sizeof(s->spi); i++) {
+    for (uint32_t i = 0; i < ARRAY_SIZE(s->spi); i++) {
         sysbus_realize(SYS_BUS_DEVICE(&s->spi[i]), &error_fatal);
     }
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[0]), 0, S5L8702_SPI0_BASE);
@@ -74,7 +78,7 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     memory_region_init_ram(&s->brom, OBJECT(dev), "s5l8702.bootrom", S5L8702_BOOTROM_SIZE, &error_fatal);
     memory_region_add_subregion(system_memory, S5L8702_BOOTROM_BASE_ADDR, &s->brom);
     memory_region_init_alias(&s->brom_alias, OBJECT(dev), "s5l8702.bootrom-alias", &s->brom, 0, S5L8702_BOOTROM_SIZE);
-    memory_region_add_subregion(system_memory, 0x0, &s->brom_alias);
+    memory_region_add_subregion(system_memory, S5L8702_BASE_BOOT_ADDR, &s->brom_alias);
 
     /* IRAM0 */
     memory_region_init_ram(&s->iram0, OBJECT(dev), "s5l8702.iram0", S5L8702_IRAM0_SIZE, &error_fatal);
@@ -84,13 +88,15 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     memory_region_init_ram(&s->iram1, OBJECT(dev), "s5l8702.iram1", S5L8702_IRAM1_SIZE, &error_fatal);
     memory_region_add_subregion(system_memory, S5L8702_IRAM1_BASE_ADDR, &s->iram1);
 
-    create_unimplemented_device("unimplemented-memory", 0, 0xFFFFFFFF);
+    create_unimplemented_device("unimplemented-sfr", 0x38000000, 0x3FFFFFFF); // SFRs
     create_unimplemented_device("wdt", 0x3c800000, 0x100000);
 }
 
 static void s5l8702_class_init(ObjectClass *oc, void *data)
 {
     DeviceClass *dc = DEVICE_CLASS(oc);
+
+    printf("s5l8702_class_init\n");
 
     dc->realize = s5l8702_realize;
 }

@@ -14,6 +14,19 @@
 #include "hw/irq.h"
 #include "hw/qdev-properties.h"
 
+static char *ipod_classic_get_aupd_path(Object *obj, Error **errp)
+{
+    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
+    return g_strdup(s->aupd_path);
+}
+
+static void ipod_classic_set_aupd_path(Object *obj, const char *value, Error **errp)
+{
+    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
+    g_free(s->aupd_path);
+    s->aupd_path = g_strdup(value);
+}
+
 static char *ipod_classic_get_nand_path(Object *obj, Error **errp)
 {
     IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
@@ -57,6 +70,12 @@ static void ipod_classic_init(Object *obj)
 {
     MachineState *machine = MACHINE(obj);
     IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
+
+    printf("ipod_classic_init\n");
+
+    if (!object_property_add_str(obj, "aupd", ipod_classic_get_aupd_path, ipod_classic_set_aupd_path)) {
+        printf("ipod_classic_init: failed to add aupd property\n");
+    }
     
     if (!object_property_add_str(obj, "nand", ipod_classic_get_nand_path, ipod_classic_set_nand_path)) {
         printf("ipod_classic_init: failed to add nand property\n");
@@ -75,6 +94,8 @@ static void ipod_classic_machine_init(MachineState *machine)
 {
     IpodClassicState *s = IPOD_CLASSIC_MACHINE(machine);
 
+    printf("ipod_classic_machine_init\n");
+
     /* BIOS is not supported by this board */
     if (machine->firmware) {
         error_report("BIOS not supported for this machine");
@@ -84,6 +105,12 @@ static void ipod_classic_machine_init(MachineState *machine)
     /* This board has fixed size RAM (64MiB) */
     if (machine->ram_size != 64 * MiB) {
         error_report("This machine can only be used with 64MiB RAM");
+        exit(1);
+    }
+
+    /* Only allow 1 CPU for this board */
+    if (machine->smp.cpus != 1) {
+        error_report("This machine can only be used with 1 CPU");
         exit(1);
     }
 
@@ -106,29 +133,44 @@ static void ipod_classic_machine_init(MachineState *machine)
     DriveInfo *dinfo = drive_get(IF_MTD, 0, 0);
     if (dinfo) {
         printf("dinfo found\n");
-        qdev_prop_set_drive_err(flash_dev, "drive",
-                                blk_by_legacy_dinfo(dinfo),
-                                &error_fatal);
+        qdev_prop_set_drive_err(flash_dev, "drive", blk_by_legacy_dinfo(dinfo), &error_fatal);
     } else {
         printf("No dinfo found\n");
     }
-    qdev_realize_and_unref(flash_dev, BUS(s->soc.spi0.spi), &error_fatal);
+    qdev_realize_and_unref(flash_dev, BUS(s->soc.spi[0].spi), &error_fatal);
 
     qemu_irq flash_cs = qdev_get_gpio_in_named(flash_dev, SSI_GPIO_CS, 0);
-    qdev_connect_gpio_out(DEVICE(&(s->soc.gpio)), 0, flash_cs);
+    qdev_connect_gpio_out(DEVICE(&s->soc.gpio), 0, flash_cs);
 
     /* Read the bootrom, copy it to memory and execute it */
     assert(s->bootrom_path);
+    assert(s->aupd_path);
 
     uint8_t *bootrom = NULL;
     size_t bootrom_size = 0;
-    if (g_file_get_contents(s->bootrom_path, (char **) &bootrom, &bootrom_size, NULL)) {
-        // copy bootrom into s->soc.brom memoryregion
-        AddressSpace *nsas = cpu_get_address_space(CPU(&(s->soc.cpu)), ARMASIdx_NS);
+    if (g_file_get_contents("/Users/iscle/Downloads/classic_3g/bootrom_patched.bin", (char **) &bootrom, &bootrom_size, NULL)) {
+        printf("ipod_classic_machine_init: bootrom read successfully\n");
+        AddressSpace *nsas = cpu_get_address_space(CPU(&s->soc.cpu), ARMASIdx_NS);
         address_space_write(nsas, 0x20000000, MEMTXATTRS_UNSPECIFIED, bootrom, bootrom_size);
+        printf("ipod_classic_machine_init: bootrom copied to memory\n");
     } else {
         printf("ipod_classic_machine_init: failed to read bootrom\n");
         exit(1);
+    }
+
+    if (s->aupd_path) {
+        uint8_t *aupd = NULL;
+        size_t aupd_size = 0;
+        if (g_file_get_contents("/Users/iscle/Downloads/classic_3g/aupd.fw.decrypted.noheader", (char **) &aupd, &aupd_size, NULL)) {
+            printf("ipod_classic_machine_init: aupd read successfully\n");
+            AddressSpace *nsas = cpu_get_address_space(CPU(&s->soc.cpu), ARMASIdx_NS);
+            address_space_write(nsas, S5L8702_IRAM_BASE_ADDR, MEMTXATTRS_UNSPECIFIED, aupd, aupd_size);
+            printf("ipod_classic_machine_init: aupd copied to memory\n");
+            s->soc.cpu.env.regs[15] = S5L8702_IRAM_BASE_ADDR;
+        } else {
+            printf("ipod_classic_machine_init: failed to read aupd\n");
+            exit(1);
+        }
     }
 }
 
