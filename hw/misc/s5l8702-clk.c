@@ -57,7 +57,7 @@ enum {
     REG_PLL1LCNT_RST = 0x00000000,
     REG_PLL2LCNT_RST = 0x00000000,
     // REG_UNK4_RST = 0x00000000,
-    REG_PLLLOCK_RST = 0x00000011, // bootrom waits for (PLLLOCK & 0x11)
+    REG_PLLLOCK_RST = 0xFFFFFFFF, // bootrom waits for (PLLLOCK & 0x11)
     REG_PLLMODE_RST = 0x00000000,
     REG_PWRCON0_RST = 0x00000000,
     REG_PWRCON1_RST = 0x00000000,
@@ -78,13 +78,7 @@ static uint64_t s5l8702_clk_read(void *opaque, hwaddr offset,
     const uint32_t idx = REG_INDEX(offset);
 
     switch (offset) {
-    case 0x0018:
-    case 0x001C:
-    case 0x002C:
-    case 0x003C:
-    case 0x005C:
-    case 0x0060:
-    case 0x0064:
+    default:
         qemu_log_mask(LOG_UNIMP, "%s: unimplemented read (offset 0x%04x)\n",
                       __func__, (uint32_t) offset);
     }
@@ -99,13 +93,7 @@ static void s5l8702_clk_write(void *opaque, hwaddr offset,
     const uint32_t idx = REG_INDEX(offset);
 
     switch (offset) {
-    case 0x0018:
-    case 0x001C:
-    case 0x002C:
-    case 0x003C:
-    case 0x005C:
-    case 0x0060:
-    case 0x0064:
+    default:
         qemu_log_mask(LOG_UNIMP, "%s: unimplemented write (offset 0x%04x, value 0x%08x)\n",
                       __func__, (uint32_t) offset, (uint32_t) val);
     }

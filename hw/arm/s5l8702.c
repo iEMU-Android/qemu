@@ -23,6 +23,11 @@ static void s5l8702_init(Object *obj)
         object_initialize_child(obj, "vic[*]", &s->vic[i], TYPE_PL192);
     }
 
+    // 121.5MHz?
+    object_initialize_child(obj, "pclk", &s->pclk, TYPE_CLOCK);
+    clock_setup_canonical_path(&s->pclk);
+    object_initialize_child(obj, "extclk", &s->extclk, TYPE_CLOCK);
+    clock_setup_canonical_path(&s->extclk);
     object_initialize_child(obj, "clk", &s->clk, TYPE_S5L8702_CLK);
     object_initialize_child(obj, "aes", &s->aes, TYPE_S5L8702_AES);
     object_initialize_child(obj, "sha", &s->sha, TYPE_S5L8702_SHA);
@@ -31,6 +36,8 @@ static void s5l8702_init(Object *obj)
     for (uint32_t i = 0; i < ARRAY_SIZE(s->spi); i++) {
         object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_S5L8702_SPI);
     }
+
+    object_initialize_child(obj, "timer", &s->timer, TYPE_S5L8702_TIMER);
 }
 
 static void s5l8702_realize(DeviceState *dev, Error **errp)
@@ -74,6 +81,12 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[1]), 0, S5L8702_SPI1_BASE);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[2]), 0, S5L8702_SPI2_BASE);
 
+    /* Timer */
+    s->timer.pclk = &s->pclk;
+    s->timer.extclk = &s->extclk;
+    sysbus_realize(SYS_BUS_DEVICE(&s->timer), &error_fatal);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, S5L8702_TIMER_BASE);
+
     /* BootROM */
     memory_region_init_ram(&s->brom, OBJECT(dev), "s5l8702.bootrom", S5L8702_BOOTROM_SIZE, &error_fatal);
     memory_region_add_subregion(system_memory, S5L8702_BOOTROM_BASE_ADDR, &s->brom);
@@ -88,7 +101,7 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     memory_region_init_ram(&s->iram1, OBJECT(dev), "s5l8702.iram1", S5L8702_IRAM1_SIZE, &error_fatal);
     memory_region_add_subregion(system_memory, S5L8702_IRAM1_BASE_ADDR, &s->iram1);
 
-    create_unimplemented_device("unimplemented-sfr", 0x38000000, 0x3FFFFFFF); // SFRs
+    create_unimplemented_device("unimplemented-mem", 0x0, 0xFFFFFFFF);
     create_unimplemented_device("wdt", 0x3c800000, 0x100000);
 }
 

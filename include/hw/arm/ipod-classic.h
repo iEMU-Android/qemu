@@ -19,10 +19,7 @@ struct IpodClassicState {
     S5L8702State soc;
     MemoryRegion dram;
 
-    char *aupd_path;
     char *bootrom_path;
-    char *nand_path;
-    char *bootloader_path;
 };
 
 #endif /* HW_ARM_IPOD_CLASSIC_H */

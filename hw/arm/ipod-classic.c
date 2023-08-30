@@ -14,32 +14,6 @@
 #include "hw/irq.h"
 #include "hw/qdev-properties.h"
 
-static char *ipod_classic_get_aupd_path(Object *obj, Error **errp)
-{
-    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
-    return g_strdup(s->aupd_path);
-}
-
-static void ipod_classic_set_aupd_path(Object *obj, const char *value, Error **errp)
-{
-    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
-    g_free(s->aupd_path);
-    s->aupd_path = g_strdup(value);
-}
-
-static char *ipod_classic_get_nand_path(Object *obj, Error **errp)
-{
-    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
-    return g_strdup(s->nand_path);
-}
-
-static void ipod_classic_set_nand_path(Object *obj, const char *value, Error **errp)
-{
-    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
-    g_free(s->nand_path);
-    s->nand_path = g_strdup(value);
-}
-
 static char *ipod_classic_get_bootrom_path(Object *obj, Error **errp)
 {
     IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
@@ -53,19 +27,6 @@ static void ipod_classic_set_bootrom_path(Object *obj, const char *value, Error 
     s->bootrom_path = g_strdup(value);
 }
 
-static char *ipod_classic_get_bootloader_path(Object *obj, Error **errp)
-{
-    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
-    return g_strdup(s->bootloader_path);
-}
-
-static void ipod_classic_set_bootloader_path(Object *obj, const char *value, Error **errp)
-{
-    IpodClassicState *s = IPOD_CLASSIC_MACHINE(obj);
-    g_free(s->bootloader_path);
-    s->bootloader_path = g_strdup(value);
-}
-
 static void ipod_classic_init(Object *obj)
 {
     MachineState *machine = MACHINE(obj);
@@ -73,20 +34,8 @@ static void ipod_classic_init(Object *obj)
 
     printf("ipod_classic_init\n");
 
-    if (!object_property_add_str(obj, "aupd", ipod_classic_get_aupd_path, ipod_classic_set_aupd_path)) {
-        printf("ipod_classic_init: failed to add aupd property\n");
-    }
-    
-    if (!object_property_add_str(obj, "nand", ipod_classic_get_nand_path, ipod_classic_set_nand_path)) {
-        printf("ipod_classic_init: failed to add nand property\n");
-    }
-
     if (!object_property_add_str(obj, "bootrom", ipod_classic_get_bootrom_path, ipod_classic_set_bootrom_path)) {
         printf("ipod_classic_init: failed to add bootrom property\n");
-    }
-
-    if (!object_property_add_str(obj, "bootloader", ipod_classic_get_bootloader_path, ipod_classic_set_bootloader_path)) {
-        printf("ipod_classic_init: failed to add bootloader property\n");
     }
 }
 
@@ -144,7 +93,6 @@ static void ipod_classic_machine_init(MachineState *machine)
 
     /* Read the bootrom, copy it to memory and execute it */
     assert(s->bootrom_path);
-    assert(s->aupd_path);
 
     uint8_t *bootrom = NULL;
     size_t bootrom_size = 0;
@@ -156,21 +104,6 @@ static void ipod_classic_machine_init(MachineState *machine)
     } else {
         printf("ipod_classic_machine_init: failed to read bootrom\n");
         exit(1);
-    }
-
-    if (s->aupd_path) {
-        uint8_t *aupd = NULL;
-        size_t aupd_size = 0;
-        if (g_file_get_contents("/Users/iscle/Downloads/classic_3g/aupd.fw.decrypted.noheader", (char **) &aupd, &aupd_size, NULL)) {
-            printf("ipod_classic_machine_init: aupd read successfully\n");
-            AddressSpace *nsas = cpu_get_address_space(CPU(&s->soc.cpu), ARMASIdx_NS);
-            address_space_write(nsas, S5L8702_IRAM_BASE_ADDR, MEMTXATTRS_UNSPECIFIED, aupd, aupd_size);
-            printf("ipod_classic_machine_init: aupd copied to memory\n");
-            s->soc.cpu.env.regs[15] = S5L8702_IRAM_BASE_ADDR;
-        } else {
-            printf("ipod_classic_machine_init: failed to read aupd\n");
-            exit(1);
-        }
     }
 }
 

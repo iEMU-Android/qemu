@@ -2,6 +2,7 @@
 #define HW_ARM_S5L8702_H
 
 #include "hw/sysbus.h"
+#include "hw/clock.h"
 #include "target/arm/cpu.h"
 #include "hw/intc/arm_gic.h"
 #include "hw/intc/pl192.h"
@@ -45,12 +46,14 @@ struct S5L8702State {
     MemoryRegion iram0;         // S5L8702_IRAM0_BASE_ADDR
     MemoryRegion iram1;         // S5L8702_IRAM1_BASE_ADDR
     PL192State vic[2];
+    Clock pclk;
+    Clock extclk;
     S5L8702ClkState clk;
     S5L8702AesState aes;
     S5L8702ShaState sha;
     S5L8702GpioState gpio;
     S5L8702SpiState spi[3];
-    S5L8702TimerState timer;
+    S5L8702TimerCtrlState timer;
 };
 
 #endif /* HW_ARM_S5L8702_H */
