@@ -26,6 +26,11 @@ static uint64_t s5l8702_spi_read(void *opaque, hwaddr offset,
     uint64_t r = 0;
 
     switch (offset) {
+    case SPICTRL:
+        s->spictrl += 1;
+        r = s->spictrl;
+        printf("%s: SPICTRL: 0x%08x\n", __func__, (uint32_t) r);
+        break;
     case SPISTATUS:
         if (s->has_rx_data || (s->spisetup & 1)) {
             r |= 0x3e00;
@@ -65,6 +70,10 @@ static void s5l8702_spi_write(void *opaque, hwaddr offset,
     S5L8702SpiState *s = S5L8702_SPI(opaque);
 
     switch (offset) {
+    case SPICTRL:
+        printf("%s: SPICTRL: 0x%08x\n", __func__, (uint32_t) val);
+        s->spictrl = (uint32_t) val;
+        break;
     case SPISETUP:
         printf("%s: SPISETUP: 0x%08x\n", __func__, (uint32_t) val);
         s->spisetup = (uint32_t) val;

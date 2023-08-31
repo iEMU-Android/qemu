@@ -180,4 +180,8 @@ config AXP209_PMU
     bool
     depends on I2C
 
+config PCF50635
+    bool
+    depends on I2C
+
 source macio/Kconfig

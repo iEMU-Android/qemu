@@ -12,6 +12,7 @@
 #include "hw/timer/s5l8702-timer.h"
 #include "hw/gpio/s5l8702-gpio.h"
 #include "hw/ssi/s5l8702-spi.h"
+#include "hw/i2c/s5l8702-i2c.h"
 
 #define TYPE_S5L8702 "s5l8702"
 OBJECT_DECLARE_SIMPLE_TYPE(S5L8702State, S5L8702)
@@ -47,12 +48,15 @@ struct S5L8702State {
     MemoryRegion iram1;         // S5L8702_IRAM1_BASE_ADDR
     PL192State vic[2];
     Clock pclk;
-    Clock extclk;
+    Clock eclk;
+    Clock extclk0;
+    Clock extclk1;
     S5L8702ClkState clk;
     S5L8702AesState aes;
     S5L8702ShaState sha;
     S5L8702GpioState gpio;
     S5L8702SpiState spi[3];
+    S5L8702I2cState i2c[2];
     S5L8702TimerCtrlState timer;
 };
 

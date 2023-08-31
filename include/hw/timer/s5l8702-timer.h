@@ -17,10 +17,14 @@ OBJECT_DECLARE_SIMPLE_TYPE(S5L8702TimerCtrlState, S5L8702_TIMER)
 #define S5L8702_TIMER_COUNT_32  4
 #define S5L8702_TIMER_COUNT     (S5L8702_TIMER_COUNT_16 + S5L8702_TIMER_COUNT_32)
 
+typedef enum {
+    S5L8702_TIMER_TYPE_16,
+    S5L8702_TIMER_TYPE_32,
+} S5L8702TimerType;
+
 typedef struct S5L8702Timer {
     S5L8702TimerCtrlState *ctrl;
-    Clock pclk;
-    Clock extclk;
+    S5L8702TimerType type;
     QEMUTimer timer;
     qemu_irq irq;
     
@@ -39,7 +43,9 @@ struct S5L8702TimerCtrlState {
     /*< public >*/
     MemoryRegion iomem;
     Clock *pclk;
-    Clock *extclk;
+    Clock *eclk;
+    Clock *extclk0;
+    Clock *extclk1;
     S5L8702Timer timer[S5L8702_TIMER_COUNT];
     uint32_t tstat;
 };

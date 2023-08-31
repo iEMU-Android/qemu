@@ -23,11 +23,22 @@ static void s5l8702_init(Object *obj)
         object_initialize_child(obj, "vic[*]", &s->vic[i], TYPE_PL192);
     }
 
-    // 121.5MHz?
+    /* PCLK */
     object_initialize_child(obj, "pclk", &s->pclk, TYPE_CLOCK);
     clock_setup_canonical_path(&s->pclk);
-    object_initialize_child(obj, "extclk", &s->extclk, TYPE_CLOCK);
-    clock_setup_canonical_path(&s->extclk);
+    clock_set_hz(&s->pclk, 121500000); // 121.5MHz?
+
+    /* ECLK */
+    object_initialize_child(obj, "eclk", &s->eclk, TYPE_CLOCK);
+    clock_setup_canonical_path(&s->eclk);
+    clock_set_hz(&s->eclk, 12000000); // 12 MHz
+
+    /* EXTCLK */
+    object_initialize_child(obj, "extclk0", &s->extclk0, TYPE_CLOCK);
+    clock_setup_canonical_path(&s->extclk0);
+    object_initialize_child(obj, "extclk1", &s->extclk1, TYPE_CLOCK);
+    clock_setup_canonical_path(&s->extclk1);
+    
     object_initialize_child(obj, "clk", &s->clk, TYPE_S5L8702_CLK);
     object_initialize_child(obj, "aes", &s->aes, TYPE_S5L8702_AES);
     object_initialize_child(obj, "sha", &s->sha, TYPE_S5L8702_SHA);
@@ -35,6 +46,10 @@ static void s5l8702_init(Object *obj)
 
     for (uint32_t i = 0; i < ARRAY_SIZE(s->spi); i++) {
         object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_S5L8702_SPI);
+    }
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(s->i2c); i++) {
+        object_initialize_child(obj, "i2c[*]", &s->i2c[i], TYPE_S5L8702_I2C);
     }
 
     object_initialize_child(obj, "timer", &s->timer, TYPE_S5L8702_TIMER);
@@ -81,9 +96,18 @@ static void s5l8702_realize(DeviceState *dev, Error **errp)
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[1]), 0, S5L8702_SPI1_BASE);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[2]), 0, S5L8702_SPI2_BASE);
 
+    /* I2C */
+    for (uint32_t i = 0; i < ARRAY_SIZE(s->i2c); i++) {
+        sysbus_realize(SYS_BUS_DEVICE(&s->i2c[i]), &error_fatal);
+    }
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->i2c[0]), 0, S5L8702_I2C0_BASE);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->i2c[1]), 0, S5L8702_I2C1_BASE);
+
     /* Timer */
     s->timer.pclk = &s->pclk;
-    s->timer.extclk = &s->extclk;
+    s->timer.eclk = &s->eclk;
+    s->timer.extclk0 = &s->extclk0;
+    s->timer.extclk1 = &s->extclk1;
     sysbus_realize(SYS_BUS_DEVICE(&s->timer), &error_fatal);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, S5L8702_TIMER_BASE);
 

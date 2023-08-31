@@ -22,6 +22,7 @@ struct S5L8702SpiState {
     MemoryRegion iomem;
     SSIBus *spi;
 
+    uint32_t spictrl;
     uint32_t spisetup;
     uint32_t spitxdata;
     uint32_t spirxdata;
